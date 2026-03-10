@@ -12,7 +12,7 @@ def roc_to_ad(roc_yyyymmdd: str) -> str:
     return f"{ad_year:04d}-{month:02d}-{day:02d}"
 
 # 很簡單的規則式情緒（第一版先能跑）
-POS_WORDS = ["大獎", "獲獎", "創新高", "上漲", "成長", "增加", "優於", "突破", "擴大", "利多"]
+POS_WORDS = ["中大獎", "獲獎", "創新高", "大大上漲", "成長", "增加", "優於", "突破", "擴大", "利多"]
 NEG_WORDS = ["大下跌", "跌幅", "衰退", "虧損", "下滑", "減少", "風險", "警示", "違約", "裁員", "利空"]
 
 def rule_sentiment(text: str, n_items: int = 1) -> float:
