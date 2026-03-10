@@ -1,6 +1,7 @@
 # TWSE Market News Dashboard
 
 使用 Python 擷取台灣證券交易所（TWSE）新聞與加權指數資料，
+加上一點變化再上傳到github以及測試git
 進行基本整理與分析，並透過 Streamlit 製作簡易 dashboard。
 
 ## 使用技術
