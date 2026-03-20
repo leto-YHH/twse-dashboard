@@ -1,11 +1,62 @@
 import pandas as pd
 import streamlit as st
 from pathlib import Path
+import subprocess
+import sys
 
 st.set_page_config(page_title="TWSE Market + News Dashboard", layout="wide")
 st.title("TWSE 大盤 + 證交所新聞情緒（站內資料）")
 
 DATA_PATH = "data/processed/market_news_daily.csv"
+
+
+def run_script(script_name: str) -> str:
+    script_path = Path("scripts") / script_name
+    if not script_path.exists():
+        raise FileNotFoundError(f"找不到腳本: {script_path}")
+    result = subprocess.run([
+        sys.executable,
+        str(script_path)
+    ], capture_output=True, text=True)
+
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"腳本 {script_name} 執行失敗 (exit {result.returncode})\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+        )
+
+    return result.stdout + ("\n" + result.stderr if result.stderr else "")
+
+
+@st.cache_data(show_spinner=False)
+def ensure_pipeline_data() -> str:
+    steps = [
+        "fetch_mi_index.py",
+        "clean_mi_index.py",
+        "fetch_twse_news.py",
+        "build_market_news_daily.py",
+        "generate_daily_report.py",
+    ]
+    log = []
+    for step in steps:
+        log.append(f"執行 {step} ...")
+        try:
+            out = run_script(step)
+            log.append(out.strip() or "(無輸出)")
+        except Exception as e:
+            log.append(f"{step} 失敗: {e}")
+            raise
+
+    return "\n".join(log)
+
+
+with st.expander("🚀 資料更新 (開啟可查看執行紀錄)", expanded=False):
+    try:
+        with st.spinner("正在抓取與更新資料，請稍候..."):
+            pipeline_log = ensure_pipeline_data()
+        st.text_area("Pipeline 日誌", pipeline_log, height=240)
+    except Exception as e:
+        st.error(f"資料 pipeline 執行失敗：{e}")
+        st.stop()
 
 @st.cache_data
 def load_data():
@@ -19,7 +70,7 @@ if df.empty:
     st.error("找不到資料或資料為空：data/processed/market_news_daily.csv")
     st.stop()
 
-# ===== 日期下拉選單 =====145758757857154
+# ===== 日期下拉選單 =====
 date_options = df["date"].dt.strftime("%Y-%m-%d").tolist()
 default_idx = len(date_options) - 1  # 預設最新一天
 
@@ -54,9 +105,16 @@ st.subheader("當日新聞標題（TWSE）")
 titles = str(latest.get("news_titles", "")).split("；")
 titles = [t.strip() for t in titles if t.strip()]
 
-if titles:
-    for i, t in enumerate(titles, 1):
+max_display = 5
+show_titles = titles[:max_display]
+
+if show_titles:
+    for i, t in enumerate(show_titles, 1):
         st.write(f"{i}. {t}")
+    if len(titles) > max_display:
+        st.caption(f"顯示前 {max_display} 則新聞（共 {len(titles)} 則）")
+    elif len(titles) < max_display:
+        st.caption(f"只有 {len(titles)} 則新聞，目標顯示 {max_display} 則")
 else:
     st.write("（無）")
 #++++

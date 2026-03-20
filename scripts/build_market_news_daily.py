@@ -71,6 +71,19 @@ def main():
     # 讀大盤加權指數
     mi = pd.read_csv("data/processed/mi_index_weighted.csv", encoding="utf-8-sig", parse_dates=["date"])
 
+    # 建立 2026/03/01 ~ 最後交易日 的完整日期序列（補足缺失日）
+    start_date = pd.to_datetime("2026-03-01")
+    end_date = mi["date"].max()
+    full_date = pd.DataFrame({"date": pd.date_range(start_date, end_date, freq="D")})
+
+    mi = (
+        full_date
+        .merge(mi, on="date", how="left")
+        .sort_values("date")
+        .ffill()
+        .fillna({"index_close": 0.0, "index_change": 0.0, "index_change_pct": 0.0, "market_dir": 0, "note": ""})
+    )
+
     # 合併
     merged = pd.merge(mi, daily, on="date", how="left")
     merged["news_count"] = merged["news_count"].fillna(0).astype(int)
