@@ -19,7 +19,7 @@ if df.empty:
     st.error("找不到資料或資料為空：data/processed/market_news_daily.csv")
     st.stop()
 
-# ===== 日期下拉選單 =====
+# ===== 日期下拉選單 =====145758757857154
 date_options = df["date"].dt.strftime("%Y-%m-%d").tolist()
 default_idx = len(date_options) - 1  # 預設最新一天
 
@@ -48,7 +48,8 @@ st.write(f"**背離判斷：** {div_label(latest.get('div_dir', 0))}")
 
 st.divider()
 
-# ===== 今日新聞 =====
+# ===== 今日新聞 =====123456789
+
 st.subheader("當日新聞標題（TWSE）")
 titles = str(latest.get("news_titles", "")).split("；")
 titles = [t.strip() for t in titles if t.strip()]
